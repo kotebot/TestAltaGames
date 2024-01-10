@@ -12,6 +12,7 @@ namespace Player.Impl
     {
         [Inject] private IPlayerInput _input;
         [Inject] private IPlayer _player;
+        [Inject] private IMovement _playerMovement;
         [Inject] private DiContainer _diContainer;
         
         [FoldoutGroup("Setup", false), SerializeField]//if move to default c#, all setting must be move to ShottingSettigns and bind this class
@@ -44,11 +45,18 @@ namespace Player.Impl
       
         public void Spawn()
         {
+            if (_playerMovement.IsMoving)
+                return;
+            
             _activeBullet = _diContainer.Instantiate(_bulletPrefab, _spawnBulletPosition);
+            _player.Lower(_activeBullet.Radius);
         }
 
         public void Shoot()
         {
+            if (_playerMovement.IsMoving)
+                return;
+            
             _activeBullet.Move();
 
             _activeBullet = null;
@@ -56,6 +64,9 @@ namespace Player.Impl
 
         private void ChangeSize()
         {
+            if (_playerMovement.IsMoving)
+                return;
+            
             if (_activeBullet != null)
             {
                 _activeBullet.Upper(_changeSizeSpeed);

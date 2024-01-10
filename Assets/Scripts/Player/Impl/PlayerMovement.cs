@@ -1,8 +1,5 @@
-using System.Collections;
 using Player.Api;
 using Player.Impl.BaseClasses;
-using Sirenix.OdinInspector;
-using UnityEngine;
 using Zenject;
 
 namespace Player.Impl
@@ -14,7 +11,7 @@ namespace Player.Impl
 
         protected override bool CanMove()
         {
-            return _player.IsAlive;
+            return _player.IsAlive && !_player.IsWinner;
         }
     }
 }

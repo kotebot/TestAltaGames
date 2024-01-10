@@ -6,7 +6,7 @@ namespace Player.Zenject
 {
     public class PlayerInstaller : MonoInstaller
     {
-        [SerializeField] private PlayerInput _playerInput;
+        [SerializeField] private PlayerInputPanel playerInputTouch;
         [SerializeField] private Impl.Player _player;
         [SerializeField] private PlayerMovement _playerMovement;
         [SerializeField] private PlayerShooter _playerShooter;
@@ -14,8 +14,8 @@ namespace Player.Zenject
         public override void InstallBindings()
         {
             Container
-                .BindInterfacesTo<PlayerInput>()
-                .FromInstance(_playerInput)
+                .BindInterfacesTo<PlayerInputPanel>()
+                .FromInstance(playerInputTouch)
                 .AsSingle();
             
             Container
