@@ -13,7 +13,7 @@ namespace Player.Impl
 
         private bool _isClicked = false;
 
-        private void Update()
+        private void FixedUpdate()
         {
             if(_isClicked)
                 OnTapping?.Invoke();

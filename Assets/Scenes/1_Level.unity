@@ -343,7 +343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -821,32 +821,12 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1262165340197693067, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: _bulletPrefab
-      value: 
-      objectReference: {fileID: 733653564154514234, guid: 12fe5bd154fdf40e1be5885b4d42832c, type: 3}
-    - target: {fileID: 1262165340197693067, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: _changeSizeSpeed
-      value: 0.001
-      objectReference: {fileID: 0}
-    - target: {fileID: 1262165340197693067, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
       propertyPath: _spawnBulletPosition
       value: 
       objectReference: {fileID: 1104015110}
     - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
       propertyPath: m_RootOrder
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 2.500669
-      objectReference: {fileID: 0}
-    - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 2.500669
-      objectReference: {fileID: 0}
-    - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 2.500669
       objectReference: {fileID: 0}
     - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
       propertyPath: m_LocalPosition.x
@@ -887,18 +867,6 @@ PrefabInstance:
     - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6434867534823095499, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6434921345944322486, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: _speed
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 7387571193489092707, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
-      propertyPath: _minimumAliveRadius
-      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 8487947262723273072, guid: 4d98f1c38c9c1491cb2aaed907ebbe19, type: 3}
       propertyPath: m_Name
