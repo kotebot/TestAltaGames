@@ -1,0 +1,4 @@
+{
+  "name": "Ostryzhnyi.SphereSize.Editor",
+  "references":[ "GUID:7789e2ce4b8a43929e3dd0a4798d57ec", "GUID:4fc9aae457e25f343890f00cdeb4e785" ]
+}

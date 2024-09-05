@@ -20,15 +20,16 @@ namespace Ostryzhnyi.SphereSize.Scripts.Map.Impl
 
         private void GenerateLevel()
         {
-            if (LevelNumber > _levelData.Levels.Count)
+            if (LevelNumber >= _levelData.Levels.Count)
                 LevelNumber = 0;
             
             var level = _levelData.Levels[LevelNumber];
 
-            foreach (var position in level.Positions)
+            foreach (Vector3 localPosition in level.Positions)
             {
-                var block = Instantiate(_blockPrefab, position, Quaternion.identity, transform).transform;
-                block.localPosition = new Vector3(block.localPosition.x, 0, block.localPosition.z);
+                Vector3 worldPosition = transform.TransformPoint(localPosition);
+                GameObject newBlock = Instantiate(_blockPrefab, worldPosition, Quaternion.identity);
+                newBlock.transform.parent = transform;
             }
         }
     }

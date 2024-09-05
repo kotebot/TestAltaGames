@@ -1,31 +1,36 @@
 ﻿using Ostryzhnyi.SphereSize.Scripts.Map;
+using Ostryzhnyi.Tools.Editor;
 using UnityEditor;
 using UnityEngine;
 
 namespace Ostryzhnyi.SphereSize.Editor
 {
-#if UNITY_EDITOR
-     public class LevelGeneratorWindow : EditorWindow
+    public class LevelGeneratorWindow : EditorWindow
     {
-        private Transform _centerElement;
-        private GameObject _blockerPrefab;
-        private int amountElement;
-        private float _radiusBetweenBlocks;
-        private float _width;
-        private float _length;
-        private LevelData _levelData;
-        private int selectedLevelIndex = 0;
+        private LevelGenerator _levelGenerator;
+        private Vector2 _scrollPosition;
+        private int _numberOfLevelsToGenerate = 1;
 
-        [MenuItem("Sphere Size/Level Generator")]
+        [MenuItem("Tools/Level Generator")]
         public static void ShowWindow()
         {
             var window = GetWindow<LevelGeneratorWindow>("Level Generator");
+            window.Initialize();
             SceneView.duringSceneGui += window.OnSceneGUI;
+        }
+
+        private void Initialize()
+        {
+            _levelGenerator = new LevelGenerator();
+            LoadSettings();
         }
 
         private void OnEnable()
         {
-            LoadSettings();
+            if (_levelGenerator == null)
+            {
+                Initialize();
+            }
         }
 
         private void OnDestroy()
@@ -35,45 +40,76 @@ namespace Ostryzhnyi.SphereSize.Editor
 
         private void OnGUI()
         {
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+
             EditorGUILayout.Space();
             GUILayout.Label("Level Generator Settings", EditorStyles.boldLabel);
 
             DrawSettings();
             DrawLevelManagement();
             DrawLevelActions();
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void OnSceneGUI(SceneView sceneView)
+        {
+            _levelGenerator?.OnSceneGUI(sceneView);
         }
 
         private void DrawSettings()
         {
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical("box");
-            _centerElement = (Transform)EditorGUILayout.ObjectField("Center Element", _centerElement, typeof(Transform), true);
-            _blockerPrefab = (GameObject)EditorGUILayout.ObjectField("Blocker Prefab", _blockerPrefab, typeof(GameObject), false);
-            amountElement = EditorGUILayout.IntField("Amount of Elements", amountElement);
-            _radiusBetweenBlocks = EditorGUILayout.FloatField("Radius Between Blocks", _radiusBetweenBlocks);
-            _width = EditorGUILayout.FloatField("Width of Spawn Area", _width);
-            _length = EditorGUILayout.FloatField("Length of Spawn Area", _length);
+            _levelGenerator.CenterElement = (Transform)EditorGUILayout.ObjectField("Center Element", _levelGenerator.CenterElement, typeof(Transform), true);
+            _levelGenerator.BlockerPrefab = (GameObject)EditorGUILayout.ObjectField("Blocker Prefab", _levelGenerator.BlockerPrefab, typeof(GameObject), false);
+
+            DrawRandomizableValue("Amount of Elements", _levelGenerator.AmountElement);
+            DrawRandomizableValue("Radius Between Blocks", _levelGenerator.RadiusBetweenBlocks);
+
+            _levelGenerator.Width = EditorGUILayout.FloatField("Width of Spawn Area", _levelGenerator.Width);
+            _levelGenerator.Length = EditorGUILayout.FloatField("Length of Spawn Area", _levelGenerator.Length);
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawRandomizableValue(string label, RandomizableValue value)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(label);
+            value.Mode = (RandomizableValue.RandomMode)EditorGUILayout.EnumPopup(value.Mode, GUILayout.MaxWidth(150));
+
+            switch (value.Mode)
+            {
+                case RandomizableValue.RandomMode.Constant:
+                    value.ConstantValue = EditorGUILayout.FloatField(value.ConstantValue);
+                    break;
+                case RandomizableValue.RandomMode.RandomBetweenTwoConstants:
+                    value.MinValue = EditorGUILayout.FloatField(value.MinValue);
+                    value.MaxValue = EditorGUILayout.FloatField(value.MaxValue);
+                    break;
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawLevelManagement()
         {
             EditorGUILayout.Space();
-            _levelData = (LevelData)EditorGUILayout.ObjectField("Level Data", _levelData, typeof(LevelData), false);
+            _levelGenerator.LevelData = (LevelData)EditorGUILayout.ObjectField("Level Data", _levelGenerator.LevelData, typeof(LevelData), false);
 
-            if (_levelData == null) return;
+            if (_levelGenerator.LevelData == null) return;
 
             EditorGUILayout.Space();
             GUILayout.Label("Level Management", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginVertical("box");
-            if (_levelData.Levels.Count > 0)
+            if (_levelGenerator.LevelData.Levels.Count > 0)
             {
-                selectedLevelIndex = EditorGUILayout.IntSlider("Select Level", selectedLevelIndex, 0, _levelData.Levels.Count - 1);
+                _levelGenerator.SelectedLevelIndex = EditorGUILayout.IntSlider("Select Level", _levelGenerator.SelectedLevelIndex, 0, _levelGenerator.LevelData.Levels.Count - 1);
             }
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Add New Level")) AddNewLevel();
-            if (GUILayout.Button("Delete Selected Level")) DeleteSelectedLevel();
+            if (GUILayout.Button("Add New Level")) _levelGenerator.AddNewLevel();
+            if (GUILayout.Button("Delete Selected Level")) _levelGenerator.DeleteSelectedLevel();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
         }
@@ -84,56 +120,76 @@ namespace Ostryzhnyi.SphereSize.Editor
             GUILayout.Label("Level Actions", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Generate Level")) GenerateLevel();
-            if (GUILayout.Button("Save Level Data")) SaveLevelData();
+            if (GUILayout.Button("Generate Level")) _levelGenerator.GenerateLevel();
+            if (GUILayout.Button("Save Level Data")) _levelGenerator.SaveLevelData();
             EditorGUILayout.EndHorizontal();
 
-            if (GUILayout.Button("Load Level Data")) LoadLevelData();
-            if (GUILayout.Button("Clear current map")) ClearExistingBlocks();
-        }
+            if (GUILayout.Button("Load Level Data")) _levelGenerator.LoadLevelData();
+            if (GUILayout.Button("Clear current map")) _levelGenerator.ClearExistingBlocks();
 
-        private void OnSceneGUI(SceneView sceneView)
-        {
-            if (_centerElement == null) return;
+            EditorGUILayout.Space();
+            GUILayout.Label("Generate Multiple Levels", EditorStyles.boldLabel);
+            _numberOfLevelsToGenerate = EditorGUILayout.IntField("Number of Levels", _numberOfLevelsToGenerate);
+            if (GUILayout.Button("Generate Multiple Levels"))
+            {
+                _levelGenerator.GenerateMultipleLevels(_numberOfLevelsToGenerate);
+            }
 
-            Handles.color = new Color(0, 1, 0, 0.25f);
-            Vector3 center = _centerElement.position;
-            Vector3 size = new Vector3(_width, 0, _length);
-
-            Handles.color = Color.green;
-            Handles.DrawWireCube(center, size);
+            SaveSettings();
         }
 
         private void LoadSettings()
         {
-            _centerElement = LoadSetting<Transform>("LG_CenterElement");
-            _blockerPrefab = LoadSetting<GameObject>("LG_BlockerPrefab");
-            amountElement = EditorPrefs.GetInt("LG_AmountElement", 10);
-            _radiusBetweenBlocks = EditorPrefs.GetFloat("LG_RadiusBetweenBlocks", 2f);
-            _width = EditorPrefs.GetFloat("LG_Width", 5f);
-            _length = EditorPrefs.GetFloat("LG_Length", 15f);
-            selectedLevelIndex = EditorPrefs.GetInt("LG_SelectedLevelIndex", 0);
-
-            string levelDataPath = EditorPrefs.GetString("LG_LevelDataPath", string.Empty);
-            if (!string.IsNullOrEmpty(levelDataPath))
+            _levelGenerator.CenterElement = LoadSetting<Transform>("LG_CenterElement");
+            _levelGenerator.BlockerPrefab = LoadSetting<GameObject>("LG_BlockerPrefab");
+            if (_levelGenerator.BlockerPrefab == null)
             {
-                _levelData = AssetDatabase.LoadAssetAtPath<LevelData>(levelDataPath);
+                _levelGenerator.BlockerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Ostryzhnyi/SphereSize/Scripts/Blockers/Impl/Prefabs/Blocker.prefab");
             }
+
+            _levelGenerator.AmountElement = LoadRandomizableValue("LG_AmountElement");
+            if (_levelGenerator.AmountElement == null || _levelGenerator.AmountElement.Mode == 0)
+            {
+                _levelGenerator.AmountElement = new RandomizableValue
+                {
+                    Mode = RandomizableValue.RandomMode.RandomBetweenTwoConstants,
+                    MinValue = 10f,
+                    MaxValue = 15f
+                };
+            }
+
+            _levelGenerator.RadiusBetweenBlocks = LoadRandomizableValue("LG_RadiusBetweenBlocks");
+            if (_levelGenerator.RadiusBetweenBlocks == null || _levelGenerator.RadiusBetweenBlocks.Mode == 0)
+            {
+                _levelGenerator.RadiusBetweenBlocks = new RandomizableValue
+                {
+                    Mode = RandomizableValue.RandomMode.RandomBetweenTwoConstants,
+                    MinValue = 0.8f,
+                    MaxValue = 2f
+                };
+            }
+
+            _levelGenerator.LevelData = AssetDatabase.LoadAssetAtPath<LevelData>("Assets/Ostryzhnyi/SphereSize/Scripts/Map/Data/LevelData.asset");
+
+            _levelGenerator.Width = EditorPrefs.GetFloat("LG_Width", 5f);
+            _levelGenerator.Length = EditorPrefs.GetFloat("LG_Length", 15f);
+
+            _levelGenerator.SelectedLevelIndex = EditorPrefs.GetInt("LG_SelectedLevelIndex", 0);
         }
 
         private void SaveSettings()
         {
-            SaveSetting("LG_CenterElement", _centerElement);
-            SaveSetting("LG_BlockerPrefab", _blockerPrefab);
-            EditorPrefs.SetInt("LG_AmountElement", amountElement);
-            EditorPrefs.SetFloat("LG_RadiusBetweenBlocks", _radiusBetweenBlocks);
-            EditorPrefs.SetFloat("LG_Width", _width);
-            EditorPrefs.SetFloat("LG_Length", _length);
-            EditorPrefs.SetInt("LG_SelectedLevelIndex", selectedLevelIndex);
+            SaveSetting("LG_CenterElement", _levelGenerator.CenterElement);
+            SaveSetting("LG_BlockerPrefab", _levelGenerator.BlockerPrefab);
+            SaveRandomizableValue("LG_AmountElement", _levelGenerator.AmountElement);
+            SaveRandomizableValue("LG_RadiusBetweenBlocks", _levelGenerator.RadiusBetweenBlocks);
+            EditorPrefs.SetFloat("LG_Width", _levelGenerator.Width);
+            EditorPrefs.SetFloat("LG_Length", _levelGenerator.Length);
+            EditorPrefs.SetInt("LG_SelectedLevelIndex", _levelGenerator.SelectedLevelIndex);
 
-            if (_levelData != null)
+            if (_levelGenerator.LevelData != null)
             {
-                string assetPath = AssetDatabase.GetAssetPath(_levelData);
+                string assetPath = AssetDatabase.GetAssetPath(_levelGenerator.LevelData);
                 EditorPrefs.SetString("LG_LevelDataPath", assetPath);
             }
         }
@@ -151,144 +207,22 @@ namespace Ostryzhnyi.SphereSize.Editor
             }
         }
 
-        private void GenerateLevel()
+        private RandomizableValue LoadRandomizableValue(string key)
         {
-            if (_centerElement == null || _blockerPrefab == null)
-            {
-                Debug.LogError("Center Element or Blocker Prefab is not set.");
-                return;
-            }
-            
-            ClearExistingBlocks();
-
-            Vector3[] positions = new Vector3[amountElement];
-
-            for (int i = 0; i < amountElement; i++)
-            {
-                Vector3 spawnPosition = GenerateValidPosition(positions, i);
-                if (spawnPosition == Vector3.zero) continue;
-
-                GameObject newBlock = Instantiate(_blockerPrefab, spawnPosition, Quaternion.identity);
-                newBlock.transform.parent = _centerElement;
-                positions[i] = spawnPosition;
-            }
-
-            if (_levelData != null && selectedLevelIndex < _levelData.Levels.Count)
-            {
-                _levelData.Levels[selectedLevelIndex].Positions = positions;
-                EditorUtility.SetDirty(_levelData);
-            }
-
-            SaveSettings();
+            var value = new RandomizableValue();
+            value.Mode = (RandomizableValue.RandomMode)EditorPrefs.GetInt(key + "_Mode", 0);
+            value.ConstantValue = EditorPrefs.GetFloat(key + "_Constant", 1f);
+            value.MinValue = EditorPrefs.GetFloat(key + "_Min", 0f);
+            value.MaxValue = EditorPrefs.GetFloat(key + "_Max", 1f);
+            return value;
         }
 
-        private Vector3 GenerateValidPosition(Vector3[] positions, int currentIndex)
+        private void SaveRandomizableValue(string key, RandomizableValue value)
         {
-            int attempts = 0;
-            while (attempts < 1000)
-            {
-                float xPos = Random.Range(-_width / 2, _width / 2);
-                float zPos = Random.Range(-_length / 2, _length / 2);
-                Vector3 spawnPosition = _centerElement.position + new Vector3(xPos, 0, zPos);
-
-                if (IsPositionValid(spawnPosition, positions, currentIndex))
-                {
-                    return spawnPosition;
-                }
-                attempts++;
-            }
-
-            Debug.LogWarning("Could not find valid position after 1000 attempts.");
-            return Vector3.zero;
-        }
-
-        private bool IsPositionValid(Vector3 position, Vector3[] positions, int currentIndex)
-        {
-            for (int i = 0; i < currentIndex; i++)
-            {
-                if (Vector3.Distance(position, positions[i]) < _radiusBetweenBlocks)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private void SaveLevelData()
-        {
-            if (_levelData == null || selectedLevelIndex >= _levelData.Levels.Count)
-            {
-                Debug.LogError("No LevelData asset assigned or invalid level selected.");
-                return;
-            }
-
-            Vector3[] positions = new Vector3[_centerElement.childCount];
-            for (int i = 0; i < _centerElement.childCount; i++)
-            {
-                positions[i] = _centerElement.GetChild(i).position;
-            }
-
-            _levelData.Levels[selectedLevelIndex].Positions = positions;
-            EditorUtility.SetDirty(_levelData);
-            Debug.Log("Level data saved.");
-
-            SaveSettings();
-        }
-
-        private void LoadLevelData()
-        {
-            if (_levelData == null || selectedLevelIndex >= _levelData.Levels.Count)
-            {
-                Debug.LogError("No LevelData asset assigned or invalid level selected.");
-                return;
-            }
-
-            ClearExistingBlocks();
-
-            foreach (Vector3 blockPosition in _levelData.Levels[selectedLevelIndex].Positions)
-            {
-                GameObject newBlock = Instantiate(_blockerPrefab, blockPosition, Quaternion.identity);
-                newBlock.transform.parent = _centerElement;
-            }
-
-            Debug.Log("Level data loaded.");
-
-            SaveSettings();
-        }
-
-        private void ClearExistingBlocks()
-        {
-            for (int i = _centerElement.childCount - 1; i >= 0; i--)
-            {
-                DestroyImmediate(_centerElement.GetChild(i).gameObject);
-            }
-
-            SaveSettings();
-        }
-
-        private void AddNewLevel()
-        {
-            if (_levelData != null)
-            {
-                _levelData.Levels.Add(new BlockerPositions());
-                selectedLevelIndex = _levelData.Levels.Count - 1;
-                EditorUtility.SetDirty(_levelData);
-            }
-
-            SaveSettings();
-        }
-
-        private void DeleteSelectedLevel()
-        {
-            if (_levelData == null || selectedLevelIndex >= _levelData.Levels.Count) return;
-
-            _levelData.Levels.RemoveAt(selectedLevelIndex);
-            selectedLevelIndex = Mathf.Clamp(selectedLevelIndex - 1, 0, _levelData.Levels.Count - 1);
-            EditorUtility.SetDirty(_levelData);
-
-            SaveSettings();
+            EditorPrefs.SetInt(key + "_Mode", (int)value.Mode);
+            EditorPrefs.SetFloat(key + "_Constant", value.ConstantValue);
+            EditorPrefs.SetFloat(key + "_Min", value.MinValue);
+            EditorPrefs.SetFloat(key + "_Max", value.MaxValue);
         }
     }
-#endif
-   
 }
