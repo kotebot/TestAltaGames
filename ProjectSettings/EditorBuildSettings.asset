@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Ostryzhnyi/SphereSize/Scenes/1_Level.unity
+    path: Assets/Ostryzhnyi/TrueRoad/Scenes/SampleScene.unity
     guid: 2ad5283f2561d4a288c42c0b31d396b3
   - enabled: 1
     path: Assets/Ostryzhnyi/SphereSize/Scenes/2_Level.unity
