@@ -1,0 +1,11 @@
+Quick Roll Game is governed by the Asset Store EULA; however, the following components are governed by the licenses indicated below:
+
+А. TextMesh Pro asset 
+    - Asset Store EULA
+    - License details available here: https://unity3d.com/es/legal/as_terms
+    
+B. KayKit : Dungeon Remastered Pack (1.1)
+    - Creative Commons Zero, CC0
+    - License details available here: http://creativecommons.org/publicdomain/zero/1.0/
+
+
